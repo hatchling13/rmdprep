@@ -1,0 +1,7 @@
+[package]
+name = "rmdprep"
+version = "0.1.0"
+authors = ["Hatchling <hatchling3713@gmail.com>"]
+edition = "2018"
+
+[dependencies]
