@@ -61,7 +61,14 @@ fn create_post(s: String) {
     // TODO : Implement
     // Divide text into front-matter and content
 
-    let a = s.rfind("\\+\\+\\+");
+    let v: Vec<&str> = s.split("+++").collect();
 
-    print!("Position of second +++ : {}", a.unwrap());
+    println!("Vec size : {}", v.len());
+
+    let front_matter = String::from(v[1].trim());
+    let content = String::from(v[2].trim());
+
+    println!("{}", front_matter);
+    println!("----------------");
+    println!("{}", content);
 }
