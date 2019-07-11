@@ -3,6 +3,8 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
 
+use regex::Regex;
+
 #[allow(dead_code)]
 enum StaticGen {
     Zola,
@@ -56,19 +58,25 @@ fn read_file(file_name: &str, contents: &mut String) -> std::result::Result<usiz
 }
 
 fn create_post(s: String) {
-    // let mut content = String::new();
-
-    // TODO : Implement
-    // Divide text into front-matter and content
-
     let v: Vec<&str> = s.split("+++").collect();
 
-    println!("Vec size : {}", v.len());
-
-    let front_matter = String::from(v[1].trim());
+    // let front_matter = String::from(v[1].trim());
     let content = String::from(v[2].trim());
 
-    println!("{}", front_matter);
-    println!("----------------");
-    println!("{}", content);
+    let content_output = create_content(content);
+
+    println!("{}", content_output);
+}
+
+fn create_content(c: String) -> String
+{
+    let result: String = String::from("");
+
+    let re = Regex::new(r"\$\[.+\]").unwrap();
+
+    for caps in re.captures_iter(c.as_str()) {
+        print!("{}", caps.get(1).unwrap().as_str())
+    }
+
+    result
 }
