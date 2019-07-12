@@ -12,26 +12,28 @@ enum StaticGen {
 }
 
 fn main() {
-    /*
-    let usage = "
-                Usage:\n
-                rmdprep <file> [options]
-              Options\n
-                -h --help\tShow this screen.\n
-                -v --version\tShow version.\n
-              ";
-    */
+    let usage = "Usage: rmdprep <file> [options]\n
+    Options:\n
+    -h --help\tShow this screen.
+    -v --version\tShow version.\n";
+
     let args: Vec<String> = env::args().collect();
-    let file_name = &args[1];
-    
+
+    let mut file_name = String::new();
+
+    match args.len() {
+        1 => println!("{}", usage),
+        _ => file_name.push_str(&args[1]),
+    }
+
     let mut text = String::new();
-    
-    {
-        let result = read_file(file_name, &mut text);
+
+    if !file_name.is_empty(){
+        let result = read_file(file_name.as_str(), &mut text);
         
         match result {
             Ok(size) => println!("read_file succeeded, file size: {}", size),
-            Err(e) => print!("read_file failed: {:?}", e.kind()),
+            Err(e) => print!("read_file failed: {:?}", e.kind())
         }
     }
     
@@ -51,7 +53,6 @@ fn read_file(file_name: &str, contents: &mut String) -> std::result::Result<usiz
             result
         }
         Err(e) => {
-            println!("cannot open file: {:?}", e.kind());
             return Err(e);
         }
     }
@@ -70,12 +71,24 @@ fn create_post(s: String) {
 
 fn create_content(c: String) -> String
 {
+    let content = c.as_str();
+
     let result: String = String::from("");
 
     let re = Regex::new(r"\$\[.+\]").unwrap();
 
-    for caps in re.captures_iter(c.as_str()) {
-        print!("{}", caps.get(1).unwrap().as_str())
+    println!("start of regex");
+
+    if re.is_match(content) {
+        let caps = re.captures(content).unwrap();
+
+        let commands: Vec<Option<regex::Match>> = caps.iter().collect();
+
+        println!("number of commands: {}", commands.len());
+
+        for command in commands {
+            println!("{}", command.unwrap().as_str());
+        }
     }
 
     result
