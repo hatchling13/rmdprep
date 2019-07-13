@@ -71,25 +71,39 @@ fn create_post(s: String) {
 
 fn create_content(c: String) -> String
 {
+    let result: String = String::from("");
+ 
+    // tokenisation start
+
+    let mut tokens: Vec<(&str, &str)> = Vec::new();
+
     let content = c.as_str();
 
-    let result: String = String::from("");
-
-    let re = Regex::new(r"\$\[.+\]").unwrap();
+    let re = Regex::new(r"(\$\[.+\])").unwrap();
 
     println!("start of regex");
 
     if re.is_match(content) {
-        let caps = re.captures(content).unwrap();
-
-        let commands: Vec<Option<regex::Match>> = caps.iter().collect();
-
-        println!("number of commands: {}", commands.len());
+        let commands: Vec<regex::Match> = re.find_iter(content).collect();
 
         for command in commands {
-            println!("{}", command.unwrap().as_str());
+            let x: &[_] = &['[', ']'];
+
+            let a = command.as_str().trim_start_matches("$").trim_matches(x);
+
+            
+
+            println!("{}", a);
         }
     }
+
+    // tokenisation end
+
+    // preparation start
+    // preparation end
+
+    // substitution start
+    // substitution end
 
     result
 }
