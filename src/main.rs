@@ -21,9 +21,10 @@ fn main() {
 
     let mut file_name = String::new();
 
-    match args.len() {
-        1 => println!("{}", usage),
-        _ => file_name.push_str(&args[1]),
+    if let 1 = args.len() {
+        println!("{}", usage);
+    } else {
+        file_name.push_str(&args[1]);
     }
 
     let mut text = String::new();
@@ -75,31 +76,34 @@ fn create_content(c: String) -> String
  
     // tokenisation start
 
-    let mut tokens: Vec<(&str, &str)> = Vec::new();
+    let mut commands: Vec<(&str, &str)> = Vec::new();
 
     let content = c.as_str();
 
     let re = Regex::new(r"(\$\[.+\])").unwrap();
 
-    println!("start of regex");
-
     if re.is_match(content) {
-        let commands: Vec<regex::Match> = re.find_iter(content).collect();
+        let matched: Vec<regex::Match> = re.find_iter(content).collect();
 
-        for command in commands {
+        for command in matched {
             let x: &[_] = &['[', ']'];
 
             let a = command.as_str().trim_start_matches("$").trim_matches(x);
 
-            
-
-            println!("{}", a);
+            commands.push(a.split_at(a.find(" ").unwrap()));
         }
+
+        println!("{:?}", commands);
     }
 
     // tokenisation end
 
     // preparation start
+    
+    for command in commands {
+        
+    }
+    
     // preparation end
 
     // substitution start
