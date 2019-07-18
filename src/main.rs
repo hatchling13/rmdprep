@@ -5,6 +5,12 @@ use std::io::BufReader;
 
 use regex::Regex;
 
+enum Token {
+    Code,
+    Youtube,
+    Error
+}
+
 #[allow(dead_code)]
 enum StaticGen {
     Zola,
@@ -76,7 +82,7 @@ fn create_content(c: String) -> String
  
     // tokenisation start
 
-    let mut commands: Vec<(&str, &str)> = Vec::new();
+    let mut commands: Vec<(Token, &str)> = Vec::new();
 
     let content = c.as_str();
 
@@ -88,12 +94,24 @@ fn create_content(c: String) -> String
         for command in matched {
             let x: &[_] = &['[', ']'];
 
-            let a = command.as_str().trim_start_matches("$").trim_matches(x);
+            let token_enum: Token;
 
-            commands.push(a.split_at(a.find(" ").unwrap()));
+            let command_trimmed = command.as_str().trim_start_matches("$").trim_matches(x);
+
+            let command_tuple = command_trimmed.split_at(command_trimmed.find(" ").unwrap());
+
+            match command_tuple.0 { 
+                "code" => token_enum = Token::Code,
+                "youtube" => token_enum = Token::Youtube,
+                _ => token_enum = Token::Error
+            }
+
+            // Find graceful way to process Token::Error
+
+            // match? if let? impl PartialEq?
+
+            commands.push((token_enum, command_tuple.1.trim_start()));
         }
-
-        println!("{:?}", commands);
     }
 
     // tokenisation end
