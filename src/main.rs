@@ -5,9 +5,19 @@ use std::io::BufReader;
 
 use regex::Regex;
 
+#[derive(Debug)]
+struct Command {
+    token: Token,
+    args: String,
+    start: usize,
+    end: usize,
+}
+
+#[derive(PartialEq, Debug)]
 enum Token {
     Code,
     Youtube,
+    Execute,
     Error
 }
 
@@ -82,7 +92,7 @@ fn create_content(c: String) -> String
  
     // tokenisation start
 
-    let mut commands: Vec<(Token, &str)> = Vec::new();
+    let mut commands: Vec<Command> = Vec::new();
 
     let content = c.as_str();
 
@@ -100,27 +110,34 @@ fn create_content(c: String) -> String
 
             let command_tuple = command_trimmed.split_at(command_trimmed.find(" ").unwrap());
 
+            println!("start: {}, end: {}", command.start(), command.end());
+
             match command_tuple.0 { 
                 "code" => token_enum = Token::Code,
                 "youtube" => token_enum = Token::Youtube,
+                "exec" => token_enum = Token::Execute,
                 _ => token_enum = Token::Error
             }
 
-            // Find graceful way to process Token::Error
+            if token_enum != Token::Error {
+                let com: Command = Command { token: token_enum, args: String::from(command_tuple.1.trim_start()), start: command.start(), end: command.end() };
 
-            // match? if let? impl PartialEq?
-
-            commands.push((token_enum, command_tuple.1.trim_start()));
+                commands.push(com);
+            }
         }
+
+        println!("{:?}", commands);
     }
 
     // tokenisation end
 
     // preparation start
     
+    /*
     for command in commands {
         
     }
+    */
     
     // preparation end
 
