@@ -1,7 +1,6 @@
+mod file;
+
 use std::env;
-use std::fs::File;
-use std::io::prelude::*;
-use std::io::BufReader;
 
 use regex::Regex;
 
@@ -21,11 +20,11 @@ enum Token {
     Error
 }
 
-#[allow(dead_code)]
+/*
 enum StaticGen {
     Zola,
-    Hugo,
 }
+*/
 
 fn main() {
     let usage = "Usage: rmdprep <file> [options]\n
@@ -46,7 +45,7 @@ fn main() {
     let mut text = String::new();
 
     if !file_name.is_empty(){
-        let result = read_file(file_name.as_str(), &mut text);
+        let result = file::read_file(file_name.as_str(), &mut text);
         
         match result {
             Ok(size) => println!("read_file succeeded, file size: {}", size),
@@ -59,21 +58,7 @@ fn main() {
     }
 }
 
-fn read_file(file_name: &str, contents: &mut String) -> std::result::Result<usize, std::io::Error> {
-    let file = File::open(file_name);
-    
-    match file {
-        Ok(_) => {
-            let mut file_buffer = BufReader::new(file.unwrap());
-            let result = file_buffer.read_to_string(contents);
-        
-            result
-        }
-        Err(e) => {
-            return Err(e);
-        }
-    }
-}
+
 
 fn create_post(s: String) {
     let v: Vec<&str> = s.split("+++").collect();
@@ -86,9 +71,8 @@ fn create_post(s: String) {
     println!("{}", content_output);
 }
 
-fn create_content(c: String) -> String
-{
-    let result: String = String::from("");
+fn create_content(c: String) -> String {
+    let result: String = String::new();
  
     // tokenisation start
 
@@ -129,15 +113,19 @@ fn create_content(c: String) -> String
         println!("{:?}", commands);
     }
 
-    // tokenisation end
+    // tokenisation end, functionise?
 
     // preparation start
     
-    /*
     for command in commands {
-        
+        match command.token {
+            Token::Code => content_code(),
+            Token::Execute => content_execute(),
+            Token::Youtube => content_youtube(),
+
+            Token::Error => {}
+        }
     }
-    */
     
     // preparation end
 
@@ -145,4 +133,16 @@ fn create_content(c: String) -> String
     // substitution end
 
     result
+}
+
+fn content_code() {
+    
+}
+
+fn content_execute() {
+    
+}
+
+fn content_youtube() {
+    
 }
