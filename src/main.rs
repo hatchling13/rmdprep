@@ -1,6 +1,7 @@
 mod file;
 
 use std::env;
+use std::collections::HashMap;
 
 use regex::Regex;
 
@@ -8,8 +9,6 @@ use regex::Regex;
 struct Command {
     token: Token,
     args: String,
-    start: usize,
-    end: usize,
 }
 
 #[derive(PartialEq, Debug)]
@@ -74,10 +73,33 @@ fn create_post(s: String) {
 fn create_content(c: String) -> String {
     let result: String = String::new();
  
-    // tokenisation start
-
     let mut commands: Vec<Command> = Vec::new();
 
+    tokenise(&c, &mut commands);
+
+    // preparation start
+
+    let mut output: Vec<String> = Vec::new();
+    
+    for command in commands {
+        match command.token {
+            Token::Code => output.push(content_code(command)),
+            Token::Execute => content_execute(),
+            Token::Youtube => content_youtube(),
+
+            Token::Error => {}
+        }
+    }
+    
+    // preparation end
+
+    // substitution start
+    // substitution end
+
+    result
+}
+
+fn tokenise(c: &String, commands: &mut Vec<Command>) {
     let content = c.as_str();
 
     let re = Regex::new(r"(\$\[.+\])").unwrap();
@@ -94,8 +116,6 @@ fn create_content(c: String) -> String {
 
             let command_tuple = command_trimmed.split_at(command_trimmed.find(" ").unwrap());
 
-            println!("start: {}, end: {}", command.start(), command.end());
-
             match command_tuple.0 { 
                 "code" => token_enum = Token::Code,
                 "youtube" => token_enum = Token::Youtube,
@@ -104,39 +124,24 @@ fn create_content(c: String) -> String {
             }
 
             if token_enum != Token::Error {
-                let com: Command = Command { token: token_enum, args: String::from(command_tuple.1.trim_start()), start: command.start(), end: command.end() };
+                let com: Command = Command { token: token_enum, args: String::from(command_tuple.1.trim_start()) };
 
                 commands.push(com);
             }
         }
-
-        println!("{:?}", commands);
     }
-
-    // tokenisation end, functionise?
-
-    // preparation start
-    
-    for command in commands {
-        match command.token {
-            Token::Code => content_code(),
-            Token::Execute => content_execute(),
-            Token::Youtube => content_youtube(),
-
-            Token::Error => {}
-        }
-    }
-    
-    // preparation end
-
-    // substitution start
-    // substitution end
-
-    result
 }
 
-fn content_code() {
-    
+fn content_code(c: Command) -> String {
+    let result = String::new();
+
+    let mut arg_map: HashMap<&str, &str> = HashMap::new();
+
+    hashing_args(c, &mut arg_map);
+
+    println!("{:?}", arg_map);
+
+    result
 }
 
 fn content_execute() {
@@ -145,4 +150,17 @@ fn content_execute() {
 
 fn content_youtube() {
     
+}
+
+fn hashing_args(c: Command, arg_map: &mut HashMap<&str, &str>) {
+    let args: Vec<&str> = c.args.split_whitespace().collect();
+
+    for arg in args {
+        let mut a: Vec<&str> = arg.split("=").collect();
+
+        let value = a.pop().unwrap();
+        let param = a.pop().unwrap();
+
+        arg_map.insert(param, value);
+    }
 }
