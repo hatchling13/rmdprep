@@ -71,7 +71,7 @@ fn create_post(s: String) {
 }
 
 fn create_content(c: String) -> String {
-    let result: String = String::new();
+    let mut result: String = String::new();
  
     let mut commands: Vec<Command> = Vec::new();
 
@@ -83,7 +83,7 @@ fn create_content(c: String) -> String {
     
     for command in commands {
         match command.token {
-            Token::Code => output.push(content_code(command)),
+            Token::Code => output.push(content_code(&command)),
             Token::Execute => content_execute(),
             Token::Youtube => content_youtube(),
 
@@ -94,6 +94,9 @@ fn create_content(c: String) -> String {
     // preparation end
 
     // substitution start
+
+    result.push_str(c.as_str());
+
     // substitution end
 
     result
@@ -132,14 +135,25 @@ fn tokenise(c: &String, commands: &mut Vec<Command>) {
     }
 }
 
-fn content_code(c: Command) -> String {
-    let result = String::new();
+fn content_code(c: &Command) -> String {
+    let mut result = String::new();
 
-    let mut arg_map: HashMap<&str, &str> = HashMap::new();
+    let mut arg_map: HashMap<String, String> = HashMap::new();
 
     hashing_args(c, &mut arg_map);
 
-    println!("{:?}", arg_map);
+    let mut codefile = String::new();
+
+    match file::read_file(arg_map.get("filename").unwrap(), &mut codefile) {
+        Ok(size) => println!("read_file for code content succeeded, file size : {}", size),
+        Err(e) => println!("read_file for code content failed, {:?}", e.kind())
+    }
+
+    result.push_str("```");
+    result.push_str(arg_map.get("lang").unwrap());
+    result.push_str("\n");
+    result.push_str(codefile.as_str());
+    result.push_str("```");
 
     result
 }
@@ -152,14 +166,14 @@ fn content_youtube() {
     
 }
 
-fn hashing_args(c: Command, arg_map: &mut HashMap<&str, &str>) {
+fn hashing_args(c: &Command, arg_map: &mut HashMap<String, String>) {
     let args: Vec<&str> = c.args.split_whitespace().collect();
 
     for arg in args {
         let mut a: Vec<&str> = arg.split("=").collect();
 
-        let value = a.pop().unwrap();
-        let param = a.pop().unwrap();
+        let value = String::from(a.pop().unwrap());
+        let param = String::from(a.pop().unwrap());
 
         arg_map.insert(param, value);
     }
