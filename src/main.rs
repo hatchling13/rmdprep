@@ -57,17 +57,30 @@ fn main() {
     }
 }
 
-
-
 fn create_post(s: String) {
     let v: Vec<&str> = s.split("+++").collect();
 
-    // let front_matter = String::from(v[1].trim());
+    let front_matter = String::from(v[1].trim());
     let content = String::from(v[2].trim());
 
     let content_output = create_content(content);
 
-    println!("{}", content_output);
+    // concat front matter with content
+
+    let mut front_output = String::new();
+
+    front_output.push_str("+++\n\n");
+    front_output.push_str(front_matter.as_str());
+    front_output.push_str("\n+++\n\n");
+
+    let mut final_output = String::new();
+
+    final_output.push_str(front_output.as_str());
+    final_output.push_str(content_output.as_str());
+
+    println!("{}", final_output);
+
+    // write file
 }
 
 fn create_content(c: String) -> String {
@@ -96,6 +109,14 @@ fn create_content(c: String) -> String {
     // substitution start
 
     result.push_str(c.as_str());
+
+    for out in output {
+        let tmp = result.clone();
+
+        let mat = Regex::new(r"(\$\[.+\])").unwrap().find(&tmp).unwrap();
+
+        result.replace_range(mat.start()..mat.end(), out.as_str());
+    }
 
     // substitution end
 
@@ -150,10 +171,10 @@ fn content_code(c: &Command) -> String {
     }
 
     result.push_str("```");
-    result.push_str(arg_map.get("lang").unwrap());
+    result.push_str(arg_map.get("lang").unwrap()); // what if "lang" is invalid?
     result.push_str("\n");
     result.push_str(codefile.as_str());
-    result.push_str("```");
+    result.push_str("\n```");
 
     result
 }
