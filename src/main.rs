@@ -172,6 +172,8 @@ fn content_code(c: &Command) -> String {
         Err(e) => println!("read_file for code content failed, {:?}", e.kind())
     }
 
+    // indicate filename
+
     result.push_str("```");
     result.push_str(arg_map.get("lang").unwrap()); // what if "lang" is invalid?
     result.push_str("\n");
