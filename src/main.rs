@@ -108,6 +108,8 @@ fn create_content(c: String) -> String {
 
     // substitution start
 
+    // How to remove non-command?
+
     result.push_str(c.as_str());
 
     for out in output {
