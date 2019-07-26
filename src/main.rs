@@ -51,9 +51,15 @@ fn main() {
             Err(e) => print!("read_file failed: {:?}", e.kind())
         }
     }
-    
+
     if !text.is_empty() {
-        create_post(text);
+        let result = check_text(&text);
+
+        if result == true {
+            create_post(text);
+        } else {
+            println!("Invalid command in file!");
+        }
     }
 }
 
@@ -107,8 +113,6 @@ fn create_content(c: String) -> String {
     // preparation end
 
     // substitution start
-
-    // How to remove non-command?
 
     result.push_str(c.as_str());
 
@@ -187,6 +191,28 @@ fn content_execute() {
 
 fn content_youtube() {
     
+}
+
+fn check_text(text: &String) -> bool {
+    let mut result = true;
+
+    let re = Regex::new(r"(\$\[.+\])").unwrap();
+
+    // needs to be global?
+
+    let tokens = ["code", "youtube", "execute"];
+
+    'outer: for com in re.find(text) {
+        for tok in tokens.iter() {
+            if !com.as_str().contains(tok) {
+                result = false;
+                
+                break 'outer;
+            }
+        }
+    }
+
+    result
 }
 
 fn hashing_args(c: &Command, arg_map: &mut HashMap<String, String>) {
