@@ -198,11 +198,34 @@ fn content_youtube() {
 fn check_text(text: &String) -> bool {
     let mut result = true;
 
+    /*
     let re = Regex::new(r"(\$\[.+\])").unwrap();
 
     // needs to be global?
 
     let tokens = ["code", "youtube", "execute"];
+    */
+
+    let v: Vec<&str> = text.split("\n").collect();
+
+    let mut line_number = 0;
+
+    // what if $[invalid_command param1=code] ?
+
+    for line in v {
+        line_number += 1;
+
+        // if let? re.match?
+
+        if line.is_empty() { continue; }
+        else if !line.starts_with("$[") { continue; }
+        else if !line.ends_with("]") { continue; }
+        else {
+
+        }
+    }
+
+    /*
 
     'outer: for com in re.find(text) {
         for tok in tokens.iter() {
@@ -213,6 +236,8 @@ fn check_text(text: &String) -> bool {
             }
         }
     }
+
+    */
 
     result
 }
