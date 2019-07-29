@@ -171,19 +171,25 @@ fn content_code(c: &Command) -> String {
 
     let mut codefile = String::new();
 
-    match file::read_file(arg_map.get("filename").unwrap(), &mut codefile) {
+    let file_name = arg_map.get("filename").unwrap();
+
+    match file::read_file(file_name, &mut codefile) {
         Ok(size) => println!("read_file for code content succeeded, file size : {}", size),
         Err(e) => println!("read_file for code content failed, {:?}", e.kind())
     }
 
-    // indicate filename
+    // Indicating file name
+    result.push_str("> ");
+    result.push_str(file_name);
 
-    result.push_str("```");
-    result.push_str(arg_map.get("lang").unwrap()); // what if "lang" is invalid?
-    result.push_str("\n");
+    // language setting
+    result.push_str("\n```");
+    result.push_str(arg_map.get("lang").map_or("", |lang| lang.as_str()));
+
+    // code
     result.push_str(codefile.as_str());
     result.push_str("\n```");
-
+    
     result
 }
 
@@ -198,19 +204,34 @@ fn content_youtube() {
 fn check_text(text: &String) -> bool {
     let mut result = true;
 
-    /*
-    let re = Regex::new(r"(\$\[.+\])").unwrap();
+    let tokens = ["code", "youtube", "execute"];
+
+    let joined = tokens.join("|");
+
+    let mut expression = String::new();
+
+    // set expression for regex
+    expression.push_str(r"(\$\[(");
+    expression.push_str(joined.as_str());
+    expression.push_str(r") (.+)\]");
+
+    let re = Regex::new(expression.as_str()).unwrap();
 
     // needs to be global?
-
-    let tokens = ["code", "youtube", "execute"];
-    */
-
-    let v: Vec<&str> = text.split("\n").collect();
 
     let mut line_number = 0;
 
     // what if $[invalid_command param1=code] ?
+
+    let caps = re.captures(text).unwrap();
+
+    for cap in caps.iter() {
+        cap.unwrap().as_str();
+    }
+
+    /*
+
+    let v: Vec<&str> = text.split("\n").collect();
 
     for line in v {
         line_number += 1;
@@ -224,6 +245,8 @@ fn check_text(text: &String) -> bool {
 
         }
     }
+
+    */
 
     /*
 
