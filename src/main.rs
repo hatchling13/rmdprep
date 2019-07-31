@@ -53,13 +53,7 @@ fn main() {
     }
 
     if !text.is_empty() {
-        let result = check_text(&text);
-
-        if result == true {
-            create_post(text);
-        } else {
-            println!("Invalid command in file!");
-        }
+        create_post(text);
     }
 }
 
@@ -93,6 +87,8 @@ fn create_content(c: String) -> String {
     let mut result: String = String::new();
  
     let mut commands: Vec<Command> = Vec::new();
+
+    listing_commands(&c);
 
     tokenise(&c, &mut commands);
 
@@ -185,6 +181,7 @@ fn content_code(c: &Command) -> String {
     // language setting
     result.push_str("\n```");
     result.push_str(arg_map.get("lang").map_or("", |lang| lang.as_str()));
+    result.push_str("\n");
 
     // code
     result.push_str(codefile.as_str());
@@ -201,6 +198,23 @@ fn content_youtube() {
     
 }
 
+fn listing_commands(text: &String) {
+    let re = Regex::new(r"\$\[(\S+) (.+)\]").unwrap();
+
+    let mut coms: Vec<(&str, &str)> = Vec::new();
+
+    for mat in re.find_iter(text) {
+        let caps = re.captures(mat.as_str()).unwrap();
+
+        let command = caps.get(1).unwrap().as_str();
+        let args = caps.get(2).unwrap().as_str();
+
+        coms.push((command, args));
+    }
+
+    println!("{:?}", coms);
+}
+/*
 fn check_text(text: &String) -> bool {
     let mut result = true;
 
@@ -211,23 +225,25 @@ fn check_text(text: &String) -> bool {
     let mut expression = String::new();
 
     // set expression for regex
-    expression.push_str(r"(\$\[(");
+    expression.push_str(r"\$\[(");
     expression.push_str(joined.as_str());
     expression.push_str(r") (.+)\]");
 
-    let re = Regex::new(expression.as_str()).unwrap();
-
-    // needs to be global?
+    let re = Regex::new(r"\$\[(\S+) (.+)\]").unwrap();
 
     let mut line_number = 0;
 
     // what if $[invalid_command param1=code] ?
 
-    let caps = re.captures(text).unwrap();
+    for mat in re.find_iter(text) {
+        let caps: Vec<regex::Captures> = re.captures_iter(mat.as_str()).collect();
 
-    for cap in caps.iter() {
-        cap.unwrap().as_str();
+        for cap in caps {
+            println!("{:?}", cap);
+        }
     }
+
+    //let caps = re.captures(text).unwrap();
 
     /*
 
@@ -264,6 +280,7 @@ fn check_text(text: &String) -> bool {
 
     result
 }
+*/
 
 fn hashing_args(c: &Command, arg_map: &mut HashMap<String, String>) {
     let args: Vec<&str> = c.args.split_whitespace().collect();
