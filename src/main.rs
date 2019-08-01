@@ -41,19 +41,17 @@ fn main() {
         file_name.push_str(&args[1]);
     }
 
-    let mut text = String::new();
+    let mut content: Vec<(usize, String)> = Vec::new();
 
-    if !file_name.is_empty(){
-        let result = file::read_file(file_name.as_str(), &mut text);
-        
-        match result {
-            Ok(size) => println!("read_file succeeded, file size: {}", size),
-            Err(e) => print!("read_file failed: {:?}", e.kind())
-        }
+    let result = file::read_line(file_name.as_str(), &mut content);
+
+    match result {
+        Ok(_) => println!("read_file succeeded"),
+        Err(e) => print!("read_file failed: {:?}", e.kind())
     }
 
-    if !text.is_empty() {
-        create_post(text);
+    if !content.is_empty() {
+        listing(&content);
     }
 }
 
@@ -198,18 +196,51 @@ fn content_youtube() {
     
 }
 
+fn listing(content: &Vec<(usize, String)>) {
+    let re = Regex::new(r"\$\[(\S+) (.+)\]").unwrap();
+
+    let mut matched: Vec<(usize, String)> = Vec::new();
+    
+    // con.0 : line number, con.1 : line content
+    for con in content {
+        let line = con.1.as_str();
+
+        if re.is_match(con.1.as_str()) {
+            matched.push((con.0, String::from(line)));
+        }
+    }
+
+    let tokens = ["code", "execute", "youtube"];
+
+    for m in matched {
+        let caps = re.captures(m.1.as_str()).unwrap();
+
+        if !tokens.contains(&caps.get(1).unwrap().as_str()) {
+            panic!("Invalid command in line {} --> {}", m.0, m.1);
+        }
+    }
+}
+
 fn listing_commands(text: &String) {
     let re = Regex::new(r"\$\[(\S+) (.+)\]").unwrap();
 
+    let tokens = ["code", "execute", "youtube"];
+
     let mut coms: Vec<(&str, &str)> = Vec::new();
 
-    for mat in re.find_iter(text) {
+    'outer: for mat in re.find_iter(text) {
         let caps = re.captures(mat.as_str()).unwrap();
 
         let command = caps.get(1).unwrap().as_str();
         let args = caps.get(2).unwrap().as_str();
 
-        coms.push((command, args));
+        for tok in tokens.iter() {
+            if tok == &command {
+                coms.push((command, args));
+
+                continue 'outer;
+            }
+        }
     }
 
     println!("{:?}", coms);
