@@ -15,8 +15,7 @@ struct Command {
 enum Token {
     Code,
     Youtube,
-    Execute,
-    Error
+    Execute
 }
 
 /*
@@ -45,16 +44,14 @@ fn main() {
 
     let result = file::read_line(file_name.as_str(), &mut content);
 
-    match result {
-        Ok(_) => println!("read_file succeeded"),
-        Err(e) => print!("read_file failed: {:?}", e.kind())
-    }
-
-    if !content.is_empty() {
+    if result.is_ok() {
         listing(&content);
+    } else {
+        println!("read_line failed");
     }
 }
 
+/*
 fn create_post(s: String) {
     let v: Vec<&str> = s.split("+++").collect();
 
@@ -80,7 +77,6 @@ fn create_post(s: String) {
 
     // write file
 }
-
 fn create_content(c: String) -> String {
     let mut result: String = String::new();
  
@@ -122,8 +118,80 @@ fn create_content(c: String) -> String {
 
     result
 }
+*/
 
-fn tokenise(c: &String, commands: &mut Vec<Command>) {
+fn listing(content: &Vec<(usize, String)>) -> bool {
+    let re = Regex::new(r"\$\[(\S+) (.+)\]").unwrap();
+
+    let mut matched: Vec<(usize, String)> = Vec::new();
+    
+    // con.0 : line number, con.1 : line content
+    for con in content {
+        let line = con.1.as_str();
+
+        if re.is_match(con.1.as_str()) {
+            matched.push((con.0, String::from(line)));
+        }
+    }
+
+    let tokens = ["code", "execute", "youtube"];
+
+    for m in &matched {
+        let caps = re.captures(m.1.as_str()).unwrap();
+
+        if !tokens.contains(&caps.get(1).unwrap().as_str()) {
+            println!("Invalid command in line {} --> {}", m.0, m.1);
+
+            return false
+        }
+    }
+
+    for m in &matched {
+        // m.0 = line number, m.1 = line content
+        let group = re.captures(m.1.as_str()).unwrap();
+
+        // .get(1) = token, .get(2) = args
+        let cmd_token = group.get(1).unwrap().as_str();
+        let cmd_args = group.get(2).unwrap().as_str();
+
+        let mut token_enum = Token::Code;
+
+        match cmd_token { 
+            "code" => token_enum = Token::Code,
+            "youtube" => token_enum = Token::Youtube,
+            "exec" => token_enum = Token::Execute,
+            _ => {}
+        }
+
+        if !check_args(token_enum, cmd_args) {
+            return false
+        }
+    }
+
+    true
+}
+
+fn check_args(token: Token, args: &str) -> bool {
+    let code = ["filename", "lang"];
+    let youtube = ["id"];
+
+    let args_splited: Vec<&str> = args.split_whitespace().collect();
+
+    for s in args_splited {
+        println!("{:?}", s);
+    }
+
+    // compare args with list
+
+    false
+}
+
+fn tokenise(re: Regex, lines: &Vec<(usize, String)>) {
+    // let commands: Vec<Command> = Vec::new();
+
+    
+
+    /*
     let content = c.as_str();
 
     let re = Regex::new(r"(\$\[.+\])").unwrap();
@@ -154,6 +222,7 @@ fn tokenise(c: &String, commands: &mut Vec<Command>) {
             }
         }
     }
+    */
 }
 
 fn content_code(c: &Command) -> String {
@@ -194,31 +263,6 @@ fn content_execute() {
 
 fn content_youtube() {
     
-}
-
-fn listing(content: &Vec<(usize, String)>) {
-    let re = Regex::new(r"\$\[(\S+) (.+)\]").unwrap();
-
-    let mut matched: Vec<(usize, String)> = Vec::new();
-    
-    // con.0 : line number, con.1 : line content
-    for con in content {
-        let line = con.1.as_str();
-
-        if re.is_match(con.1.as_str()) {
-            matched.push((con.0, String::from(line)));
-        }
-    }
-
-    let tokens = ["code", "execute", "youtube"];
-
-    for m in matched {
-        let caps = re.captures(m.1.as_str()).unwrap();
-
-        if !tokens.contains(&caps.get(1).unwrap().as_str()) {
-            panic!("Invalid command in line {} --> {}", m.0, m.1);
-        }
-    }
 }
 
 fn listing_commands(text: &String) {
