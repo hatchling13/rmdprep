@@ -25,33 +25,41 @@ enum StaticGen {
 */
 
 fn main() {
-    let usage = "Usage: rmdprep <file> [options]\n
-    Options:\n
-    -h --help\tShow this screen.
-    -v --version\tShow version.\n";
+    let usage = "Usage: rmdprep <file>";
 
     let args: Vec<String> = env::args().collect();
 
     let mut file_name = String::new();
+    let mut is_file_valid = false;
 
     if let 1 = args.len() {
         println!("{}", usage);
     } else {
         file_name.push_str(&args[1]);
+        
+        let mut content: Vec<(usize, String)> = Vec::new();
+
+        if let Ok(_) = file::read_line(file_name.as_str(), &mut content) {
+            is_file_valid = check_file(&content);
+        } else {
+            println!("read_line failed");
+        }
     }
 
-    let mut content: Vec<(usize, String)> = Vec::new();
+    match is_file_valid {
+        true => {
+            let mut contents = String::new();
 
-    let result = file::read_line(file_name.as_str(), &mut content);
-
-    if result.is_ok() {
-        listing(&content);
-    } else {
-        println!("read_line failed");
+            if let Ok(_) = file::read_file(file_name.as_str(), &mut contents) {
+                create_post(contents);
+            }
+        }
+        false => println!("fild is invalid"),
     }
+
+    //
 }
 
-/*
 fn create_post(s: String) {
     let v: Vec<&str> = s.split("+++").collect();
 
@@ -93,10 +101,8 @@ fn create_content(c: String) -> String {
     for command in commands {
         match command.token {
             Token::Code => output.push(content_code(&command)),
-            Token::Execute => content_execute(),
-            Token::Youtube => content_youtube(),
-
-            Token::Error => {}
+            Token::Execute => output.push(content_execute(&command)),
+            Token::Youtube => output.push(content_youtube(&command))
         }
     }
     
@@ -118,9 +124,8 @@ fn create_content(c: String) -> String {
 
     result
 }
-*/
 
-fn listing(content: &Vec<(usize, String)>) -> bool {
+fn check_file(content: &Vec<(usize, String)>) -> bool {
     let re = Regex::new(r"\$\[(\S+) (.+)\]").unwrap();
 
     let mut matched: Vec<(usize, String)> = Vec::new();
@@ -164,6 +169,7 @@ fn listing(content: &Vec<(usize, String)>) -> bool {
         }
 
         if !check_args(token_enum, cmd_args) {
+            println!("Invalid parameter in line {} --> {}", m.0, m.1);
             return false
         }
     }
@@ -172,26 +178,32 @@ fn listing(content: &Vec<(usize, String)>) -> bool {
 }
 
 fn check_args(token: Token, args: &str) -> bool {
+    let mut result = false;
+
     let code = ["filename", "lang"];
     let youtube = ["id"];
 
     let args_splited: Vec<&str> = args.split_whitespace().collect();
 
     for s in args_splited {
-        println!("{:?}", s);
+        let mut param_value: Vec<&str> = s.split("=").collect();
+
+        // pop out value
+        param_value.pop();
+
+        let param = param_value.pop().unwrap();
+
+        match token {
+            Token::Code => result = code.contains(&param),
+            Token::Execute => result = code.contains(&param),
+            Token::Youtube => result = youtube.contains(&param)
+        }
     }
 
-    // compare args with list
-
-    false
+    result
 }
 
-fn tokenise(re: Regex, lines: &Vec<(usize, String)>) {
-    // let commands: Vec<Command> = Vec::new();
-
-    
-
-    /*
+fn tokenise(c: &String, commands: &mut Vec<Command>) {
     let content = c.as_str();
 
     let re = Regex::new(r"(\$\[.+\])").unwrap();
@@ -202,7 +214,7 @@ fn tokenise(re: Regex, lines: &Vec<(usize, String)>) {
         for command in matched {
             let x: &[_] = &['[', ']'];
 
-            let token_enum: Token;
+            let mut token_enum = Token::Code;
 
             let command_trimmed = command.as_str().trim_start_matches("$").trim_matches(x);
 
@@ -212,17 +224,52 @@ fn tokenise(re: Regex, lines: &Vec<(usize, String)>) {
                 "code" => token_enum = Token::Code,
                 "youtube" => token_enum = Token::Youtube,
                 "exec" => token_enum = Token::Execute,
-                _ => token_enum = Token::Error
+                _ => {}
             }
 
-            if token_enum != Token::Error {
-                let com: Command = Command { token: token_enum, args: String::from(command_tuple.1.trim_start()) };
+            let com: Command = Command { token: token_enum, args: String::from(command_tuple.1.trim_start()) };
 
-                commands.push(com);
+            commands.push(com);
+        }
+    }
+}
+
+fn listing_commands(text: &String) {
+    let re = Regex::new(r"\$\[(\S+) (.+)\]").unwrap();
+
+    let tokens = ["code", "execute", "youtube"];
+
+    let mut coms: Vec<(&str, &str)> = Vec::new();
+
+    'outer: for mat in re.find_iter(text) {
+        let caps = re.captures(mat.as_str()).unwrap();
+
+        let command = caps.get(1).unwrap().as_str();
+        let args = caps.get(2).unwrap().as_str();
+
+        for tok in tokens.iter() {
+            if tok == &command {
+                coms.push((command, args));
+
+                continue 'outer;
             }
         }
     }
-    */
+
+    println!("{:?}", coms);
+}
+
+fn hashing_args(c: &Command, arg_map: &mut HashMap<String, String>) {
+    let args: Vec<&str> = c.args.split_whitespace().collect();
+
+    for arg in args {
+        let mut a: Vec<&str> = arg.split("=").collect();
+
+        let value = String::from(a.pop().unwrap());
+        let param = String::from(a.pop().unwrap());
+
+        arg_map.insert(param, value);
+    }
 }
 
 fn content_code(c: &Command) -> String {
@@ -257,115 +304,10 @@ fn content_code(c: &Command) -> String {
     result
 }
 
-fn content_execute() {
-    
+fn content_execute(c: &Command) -> String {
+    String::new()
 }
 
-fn content_youtube() {
-    
-}
-
-fn listing_commands(text: &String) {
-    let re = Regex::new(r"\$\[(\S+) (.+)\]").unwrap();
-
-    let tokens = ["code", "execute", "youtube"];
-
-    let mut coms: Vec<(&str, &str)> = Vec::new();
-
-    'outer: for mat in re.find_iter(text) {
-        let caps = re.captures(mat.as_str()).unwrap();
-
-        let command = caps.get(1).unwrap().as_str();
-        let args = caps.get(2).unwrap().as_str();
-
-        for tok in tokens.iter() {
-            if tok == &command {
-                coms.push((command, args));
-
-                continue 'outer;
-            }
-        }
-    }
-
-    println!("{:?}", coms);
-}
-/*
-fn check_text(text: &String) -> bool {
-    let mut result = true;
-
-    let tokens = ["code", "youtube", "execute"];
-
-    let joined = tokens.join("|");
-
-    let mut expression = String::new();
-
-    // set expression for regex
-    expression.push_str(r"\$\[(");
-    expression.push_str(joined.as_str());
-    expression.push_str(r") (.+)\]");
-
-    let re = Regex::new(r"\$\[(\S+) (.+)\]").unwrap();
-
-    let mut line_number = 0;
-
-    // what if $[invalid_command param1=code] ?
-
-    for mat in re.find_iter(text) {
-        let caps: Vec<regex::Captures> = re.captures_iter(mat.as_str()).collect();
-
-        for cap in caps {
-            println!("{:?}", cap);
-        }
-    }
-
-    //let caps = re.captures(text).unwrap();
-
-    /*
-
-    let v: Vec<&str> = text.split("\n").collect();
-
-    for line in v {
-        line_number += 1;
-
-        // if let? re.match?
-
-        if line.is_empty() { continue; }
-        else if !line.starts_with("$[") { continue; }
-        else if !line.ends_with("]") { continue; }
-        else {
-
-        }
-    }
-
-    */
-
-    /*
-
-    'outer: for com in re.find(text) {
-        for tok in tokens.iter() {
-            if !com.as_str().contains(tok) {
-                result = false;
-                
-                break 'outer;
-            }
-        }
-    }
-
-    */
-
-    result
-}
-*/
-
-fn hashing_args(c: &Command, arg_map: &mut HashMap<String, String>) {
-    let args: Vec<&str> = c.args.split_whitespace().collect();
-
-    for arg in args {
-        let mut a: Vec<&str> = arg.split("=").collect();
-
-        let value = String::from(a.pop().unwrap());
-        let param = String::from(a.pop().unwrap());
-
-        arg_map.insert(param, value);
-    }
+fn content_youtube(c: &Command) -> String {
+    String::new()
 }
