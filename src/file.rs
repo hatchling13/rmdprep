@@ -40,3 +40,13 @@ pub fn read_line(file_name: &str, contents: &mut Vec<(usize, String)>) -> std::r
         }
     }
 }
+
+pub fn write_file(input: &String) -> std::io::Result<()> {
+    let mut file = File::create("result.md")?;
+
+    if let Err(e) = file.write_all(input.as_bytes()) {
+        return Err(e);
+    }
+
+    Ok(())
+}

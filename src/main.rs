@@ -2,16 +2,16 @@ mod file;
 
 use std::env;
 use std::collections::HashMap;
+use std::time::SystemTime;
 
 use regex::Regex;
 
-#[derive(Debug)]
 struct Command {
     token: Token,
     args: String,
 }
 
-#[derive(PartialEq, Debug)]
+#[derive(PartialEq)]
 enum Token {
     Code,
     Youtube,
@@ -46,21 +46,28 @@ fn main() {
         }
     }
 
-    match is_file_valid {
-        true => {
-            let mut contents = String::new();
+    if let true = is_file_valid {
+        let now = SystemTime::now();
 
-            if let Ok(_) = file::read_file(file_name.as_str(), &mut contents) {
-                create_post(contents);
-            }
+        let mut contents = String::new();
+
+        let mut result = String::new();
+
+        if let Ok(_) = file::read_file(file_name.as_str(), &mut contents) {
+            result = create_post(&contents);
         }
-        false => println!("fild is invalid"),
-    }
 
-    //
+        if let true = !contents.is_empty() {
+            file::write_file(&result).unwrap();
+        }
+
+        if let Ok(elapsed) = now.elapsed() {
+            println!("{} milliseconds elapsed", elapsed.as_millis());
+        }
+    }
 }
 
-fn create_post(s: String) {
+fn create_post(s: &String) -> String {
     let v: Vec<&str> = s.split("+++").collect();
 
     let front_matter = String::from(v[1].trim());
@@ -81,10 +88,9 @@ fn create_post(s: String) {
     final_output.push_str(front_output.as_str());
     final_output.push_str(content_output.as_str());
 
-    println!("{}", final_output);
-
-    // write file
+    final_output
 }
+
 fn create_content(c: String) -> String {
     let mut result: String = String::new();
  
@@ -255,8 +261,6 @@ fn listing_commands(text: &String) {
             }
         }
     }
-
-    println!("{:?}", coms);
 }
 
 fn hashing_args(c: &Command, arg_map: &mut HashMap<String, String>) {
@@ -283,9 +287,8 @@ fn content_code(c: &Command) -> String {
 
     let file_name = arg_map.get("filename").unwrap();
 
-    match file::read_file(file_name, &mut codefile) {
-        Ok(size) => println!("read_file for code content succeeded, file size : {}", size),
-        Err(e) => println!("read_file for code content failed, {:?}", e.kind())
+    if let Err(e) = file::read_file(file_name, &mut codefile) {
+        println!("read_file for code content failed, {:?}", e.kind());
     }
 
     // Indicating file name
@@ -304,10 +307,10 @@ fn content_code(c: &Command) -> String {
     result
 }
 
-fn content_execute(c: &Command) -> String {
+fn content_execute(_c: &Command) -> String {
     String::new()
 }
 
-fn content_youtube(c: &Command) -> String {
+fn content_youtube(_c: &Command) -> String {
     String::new()
 }
