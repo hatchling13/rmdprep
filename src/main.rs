@@ -10,12 +10,7 @@ fn main() {
     }
 
     else {
-        let contents = file::read(args[1].as_str());
-
-        match contents {
-            Ok(content) => println!("{}", content),
-            Err(e) => println!("{:?}", e),
-        }
+        
     }
 }
 
