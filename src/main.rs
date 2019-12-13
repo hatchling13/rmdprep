@@ -1,10 +1,11 @@
-mod file;
+mod validate;
 
 use std::env;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-
+    let _args: Vec<String> = env::args().collect();
+    
+    /*
     if args.len() == 1 {
         println!("error: argument missing");
     }
@@ -12,6 +13,9 @@ fn main() {
     else {
         
     }
+    */
+
+
 }
 
 fn _print_help() {
