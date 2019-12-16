@@ -2,17 +2,17 @@ use semval::prelude::*;
 use std::fs;
 use std::path::PathBuf;
 
-//$[code filename=foo.c]
+// $[code filename=foo.c]
 
 // FileName validation
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+
 struct FileName(String);
 
 impl FileName {
-    const fn min_len() -> usize {
-        // a.b = 3 chars
-
+    const fn min_length() -> usize {
+        // a.b
         3
     }
 }
@@ -20,7 +20,6 @@ impl FileName {
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 enum FileNameInvalidity {
     FileNotFound,
-    Format,
     MinLength,
 }
 
@@ -29,29 +28,17 @@ impl Validate for FileName {
 
     fn validate(&self) -> ValidationResult<Self::Invalidity> {
         ValidationContext::new()
-            .invalidate_if(
-                self.0.len() < Self::min_len(),
-                FileNameInvalidity::MinLength,
-            )
-            .invalidate_if(
-                self.0.find(".").is_none(),
-                FileNameInvalidity::Format,
-            )
-            .invalidate_if(
-                {
-                    let paths = fs::read_dir(".").unwrap().map(|x| x.unwrap().path());
+        .invalidate_if({
+            let paths: Vec<PathBuf> = fs::read_dir(".").unwrap().map(|x| x.unwrap().path()).collect();
+            let mut names = paths.iter().map(|x| x.file_name().unwrap().to_str().unwrap()).filter(|x| x.contains(self.0.as_str())).peekable();
+            
+            names.next().is_none()
 
-                    let names = paths.map(|x| x.file_name().unwrap().to_str().unwrap());
-
-                    false
-                },
-                FileNameInvalidity::FileNotFound
-            )
-            .into()
+        }, FileNameInvalidity::FileNotFound)
+        .invalidate_if(self.0.len() < Self::min_length(), FileNameInvalidity::MinLength)
+        .into()
     }
 }
-
-// Code validation
 
 #[derive(Clone, Debug, Default, Eq, PartialEq)]
 struct Code {
@@ -67,10 +54,10 @@ enum CodeInvalidity {
 impl Validate for Code {
     type Invalidity = CodeInvalidity;
 
-    fn validate(&self) -> ValidatedResult<Self::Invalidity> {
+    fn validate(&self) -> ValidationResult<Self::Invalidity> {
         ValidationContext::new()
         .validate_with(&self.name, CodeInvalidity::FileName)
-        .invalidate_if(self.name.is_none() || self.lang.is_empty() , CodeInvalidity::Incomplete)
+        .invalidate_if(self.name.is_none(), CodeInvalidity::Incomplete)
         .into()
     }
 }
