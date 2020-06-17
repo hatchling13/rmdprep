@@ -1,15 +1,17 @@
-use clap::{App, load_yaml};
+mod args;
 
 fn main() {
+    let m = args::new();
 
-    let _locale = "en";
-
-    // add macro to choose yml filename decided by locale
-
-    let yaml = load_yaml!("cli.yml");
-    let m = App::from(yaml).get_matches();
+    let mut input = String::new();
 
     if m.is_present("INPUT") {
-        println!("{}", m.value_of("INPUT").unwrap());
+        input = m.value_of("INPUT").unwrap().to_string();
+    }
+
+    let files = input.split(',');
+
+    for file in files {
+        println!("{}", file);
     }
 }
