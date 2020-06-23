@@ -9,9 +9,10 @@ fn main() {
         input = m.value_of("INPUT").unwrap().to_string();
     }
 
-    let files = input.split(',');
+    // Can receive multiple filename at once
+    let names = input.split(',');
 
-    for file in files {
-        println!("{}", file);
+    for name in names {
+        println!("{}", name);
     }
 }
