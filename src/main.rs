@@ -1,21 +1,18 @@
-mod validate;
-
-use std::env;
+mod args;
 
 fn main() {
-    let _args: Vec<String> = env::args().collect();
-    
-    /*
-    if args.len() == 1 {
-        println!("error: argument missing");
+    let m = args::new();
+
+    let mut input = String::new();
+
+    if m.is_present("INPUT") {
+        input = m.value_of("INPUT").unwrap().to_string();
     }
 
-    else {
-        
-    }
-    */
-}
+    // Can receive multiple filename at once
+    let names = input.split(',');
 
-fn _print_help() {
-    
+    for name in names {
+        println!("{}", name);
+    }
 }
